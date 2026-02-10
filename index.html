@@ -3,194 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Radio Imaging Studio</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Audio Player</title>
     <style>
-        body { background: #0f172a; color: white; font-family: sans-serif; }
-        .knob-container { background: #1e293b; border-radius: 12px; padding: 15px; }
-        .track-row { border-bottom: 1px solid #334155; padding: 10px 0; }
-        .meter { height: 10px; background: #334155; border-radius: 5px; overflow: hidden; }
-        .meter-fill { height: 100%; width: 0%; background: #22c55e; transition: width 0.1s; }
+        /* Ein bisschen Styling, damit es ordentlich aussieht */
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f9;
+        }
+        .container {
+            background: #fff;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 1rem;
+        }
+        audio {
+            width: 100%;
+            max-width: 300px;
+        }
     </style>
 </head>
-<body class="p-4 md:p-10">
+<body>
 
-    <div class="max-w-4xl mx-auto">
-        <header class="mb-10 text-center">
-            <h1 class="text-4xl font-bold text-blue-400">Radio Imaging <span class="text-white">Studio 2026</span></h1>
-            <p class="text-slate-400 mt-2">Erstelle professionelle Radio-Ankündigungen mit KI-Ducking</p>
-        </header>
+<div class="container">
+    <h2>Dein Song</h2>
+    <audio controls>
+        <source src="https://drive.google.com/uc?export=download&id=1yFGJStEA7zkhFGceS4pprWwuPudz5d8P" type="audio/mpeg">
+        Dein Browser unterstützt das Audio-Element nicht.
+    </audio>
+</div>
 
-        <div class="grid grid-cols-1 gap-6">
-            
-            <div class="knob-container grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                    <label class="block text-xs font-bold uppercase mb-2">1. Deine Stimme (VO)</label>
-                    <input type="file" id="voiceInput" accept="audio/*" class="text-sm">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase mb-2">2. Musik (Bed)</label>
-                    <input type="file" id="musicInput" accept="audio/*" class="text-sm">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase mb-2">3. Effekt (Whoosh)</label>
-                    <input type="file" id="sfxInput" accept="audio/*" class="text-sm">
-                </div>
-            </div>
-
-            <div class="knob-container">
-                <h3 class="font-bold mb-4 flex items-center">🎚️ Live Mixer & Effekte</h3>
-                
-                <div class="space-y-6">
-                    <div class="track-row">
-                        <div class="flex justify-between mb-2">
-                            <span>Stimme: <span class="text-blue-400">Radio-Compression & Bass</span></span>
-                            <input type="range" id="voiceVol" min="0" max="2" step="0.1" value="1">
-                        </div>
-                        <div class="meter"><div id="voiceMeter" class="meter-fill"></div></div>
-                    </div>
-
-                    <div class="track-row">
-                        <div class="flex justify-between mb-2">
-                            <span>Hintergrundmusik: <span class="text-purple-400">Auto-Ducking Active</span></span>
-                            <input type="range" id="musicVol" min="0" max="1" step="0.1" value="0.5">
-                        </div>
-                        <div class="meter"><div id="musicMeter" class="meter-fill"></div></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="flex flex-wrap gap-4 justify-center mt-6">
-                <button id="playBtn" class="bg-green-600 hover:bg-green-500 px-8 py-3 rounded-full font-bold transition">▶ VORSCHAU</button>
-                <button id="aiOptimizeBtn" class="bg-blue-600 hover:bg-blue-500 px-8 py-3 rounded-full font-bold shadow-lg shadow-blue-500/50">✨ KI AUTO-MIX</button>
-                <button id="exportBtn" class="bg-red-600 hover:bg-red-500 px-8 py-3 rounded-full font-bold">💾 EXPORT (.WAV)</button>
-            </div>
-
-            <div id="status" class="text-center text-sm text-slate-500 mt-4 italic">Bereit. Lade Dateien hoch, um zu starten.</div>
-        </div>
-    </div>
-
-    <script>
-        let audioCtx;
-        let voiceBuffer, musicBuffer, sfxBuffer;
-        let sources = [];
-        let recorder;
-        let chunks = [];
-
-        const voiceInput = document.getElementById('voiceInput');
-        const musicInput = document.getElementById('musicInput');
-        const sfxInput = document.getElementById('sfxInput');
-        const status = document.getElementById('status');
-
-        // Initialisierung der Web Audio API beim ersten Klick
-        async function initAudio() {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-        }
-
-        // Dateien laden und dekodieren
-        async function loadBuffer(file) {
-            const arrayBuffer = await file.arrayBuffer();
-            return await audioCtx.decodeAudioData(arrayBuffer);
-        }
-
-        voiceInput.onchange = async (e) => { await initAudio(); voiceBuffer = await loadBuffer(e.target.files[0]); status.innerText = "Stimme geladen!"; };
-        musicInput.onchange = async (e) => { await initAudio(); musicBuffer = await loadBuffer(e.target.files[0]); status.innerText = "Musik geladen!"; };
-        sfxInput.onchange = async (e) => { await initAudio(); sfxBuffer = await loadBuffer(e.target.files[0]); status.innerText = "Effekt geladen!"; };
-
-        function playSound() {
-            if (!voiceBuffer || !musicBuffer) return alert("Bitte mindestens Stimme und Musik hochladen!");
-            
-            stopAll();
-
-            const startTime = audioCtx.currentTime + 0.1;
-
-            // --- 1. SFX (WHOOSH) ---
-            if(sfxBuffer) {
-                const sfxSource = audioCtx.createBufferSource();
-                sfxSource.buffer = sfxBuffer;
-                sfxSource.connect(audioCtx.destination);
-                sfxSource.start(startTime);
-                sources.push(sfxSource);
-            }
-
-            // --- 2. MUSIC TRACK (WITH DUCKING) ---
-            const musicSource = audioCtx.createBufferSource();
-            musicSource.buffer = musicBuffer;
-            const musicGain = audioCtx.createGain();
-            musicGain.gain.value = parseFloat(document.getElementById('musicVol').value);
-            
-            // AUTOMATISCHES DUCKING LOGIK (Die "KI")
-            // Musik wird leiser, wenn die Stimme einsetzt
-            musicGain.gain.setValueAtTime(musicGain.gain.value, startTime);
-            musicGain.gain.exponentialRampToValueAtTime(0.1, startTime + 0.5); // Fade out für Stimme
-            musicGain.gain.exponentialRampToValueAtTime(musicGain.gain.value, startTime + voiceBuffer.duration + 1); // Fade in nach Stimme
-
-            musicSource.connect(musicGain).connect(audioCtx.destination);
-            musicSource.start(startTime);
-            sources.push(musicSource);
-
-            // --- 3. VOICE TRACK (RADIO EFFECT) ---
-            const voiceSource = audioCtx.createBufferSource();
-            voiceSource.buffer = voiceBuffer;
-            
-            // Radio-EQ (Boost Bässe und Höhen)
-            const biquadFilter = audioCtx.createBiquadFilter();
-            biquadFilter.type = "peaking";
-            biquadFilter.frequency.value = 100;
-            biquadFilter.gain.value = 10; // Fetter Bass
-
-            const highFilter = audioCtx.createBiquadFilter();
-            highFilter.type = "highshelf";
-            highFilter.frequency.value = 5000;
-            highFilter.gain.value = 5; // Klare Höhen
-
-            // Compression (Macht die Stimme "dicht")
-            const compressor = audioCtx.createDynamicsCompressor();
-            compressor.threshold.setValueAtTime(-24, audioCtx.currentTime);
-            compressor.knee.setValueAtTime(40, audioCtx.currentTime);
-            compressor.ratio.setValueAtTime(12, audioCtx.currentTime);
-            compressor.attack.setValueAtTime(0, audioCtx.currentTime);
-            compressor.release.setValueAtTime(0.25, audioCtx.currentTime);
-
-            const voiceGain = audioCtx.createGain();
-            voiceGain.gain.value = parseFloat(document.getElementById('voiceVol').value);
-
-            voiceSource.connect(biquadFilter)
-                       .connect(highFilter)
-                       .connect(compressor)
-                       .connect(voiceGain)
-                       .connect(audioCtx.destination);
-            
-            // Stimme startet leicht verzögert nach dem Whoosh
-            voiceSource.start(startTime + 0.5);
-            sources.push(voiceSource);
-            
-            status.innerText = "Spiele Radio-Mix ab...";
-        }
-
-        function stopAll() {
-            sources.forEach(s => s.stop());
-            sources = [];
-        }
-
-        document.getElementById('playBtn').onclick = playSound;
-
-        document.getElementById('aiOptimizeBtn').onclick = () => {
-            status.innerText = "KI analysiert Frequenzen... Optimierung abgeschlossen!";
-            document.getElementById('voiceVol').value = 1.4;
-            document.getElementById('musicVol').value = 0.4;
-            // Hier könnte man noch komplexere Filter-Anpassungen triggern
-        };
-
-        // EXPORT FUNKTION (Simuliert durch MediaStream Recording)
-        document.getElementById('exportBtn').onclick = async () => {
-            const streamDest = audioCtx.createMediaStreamDestination();
-            // In einer echten App müssten wir hier das Routing zum streamDest umleiten
-            alert("In diesem Browser-Demo bitte 'Vorschau' nutzen. Für echten Export wird ein OfflineAudioContext benötigt (etwas mehr Code). Nutze 'Rechtsklick -> Speichern' falls verfügbar.");
-        };
-
-    </script>
 </body>
 </html>
